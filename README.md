@@ -21,14 +21,10 @@ OpenaAI Gym Franka Emika Panda robot grasping environment implemented with PyBul
 
 ## Install
 
-Install with `pip`:
+Install from source:
 
-    pip install gym-panda
-    
-Or, install from source:
-
-    git clone https://github.com/mahyaret/gym-panda.git
-    cd gym-panda
+    git clone https://github.com/susu1210/panda_manipulation.git
+    cd panda_manipulation
     pip install .
 
 ## Basic Usage

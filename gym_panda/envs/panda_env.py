@@ -23,7 +23,7 @@ class PandaEnv(gym.Env):
         self.observation_space = spaces.Box(np.array([-1]*5), np.array([1]*5))
         self.maxFingerForce = 20.0
         self.object="000"
-        self.storage_folder="/home/susu/inHandObjectScanning/Data"
+        self.storage_folder="~/3d_object_reconstruction/Data"
     def step(self, action):
         p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING)
 
