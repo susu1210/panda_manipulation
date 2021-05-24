@@ -5,7 +5,8 @@ import math
 from pybullet_object_models import ycb_objects
 def LoadObjectURDF(ObjectName):
     urdfRootPath = pybullet_data.getDataPath()
-    state_object = [0.6, 0.0, 0.05]
+    # state_object = [0.6, 0.0, 0.05]
+    state_object = [0.431545, 0, 0.234615] # end effector initial position
     stateOrientation=p.getQuaternionFromEuler([0,0,0])
     if not ObjectName.isalpha():
         if ObjectName == '002':
@@ -21,7 +22,9 @@ def LoadObjectURDF(ObjectName):
     elif ObjectName=='YcbChipsCan':
         state_object = [0.431545, 0.113, 0.264615]
         # state_object = [0.7, 0.13, 0.05]
-        stateOrientation=p.getQuaternionFromEuler([math.pi / 2., 0, 0])
+        # stateOrientation=p.getQuaternionFromEuler([math.pi / 2., 0, 0])
+        stateOrientation=p.getQuaternionFromEuler([0.,-math.pi,math.pi/2.])
+
         # objectUid = p.loadURDF(os.path.join(ycb_objects_path, ObjectName, "poisson / textured.obj"),
         #                        basePosition=state_object, baseOrientation=stateOrientation)
         objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model1.urdf"),

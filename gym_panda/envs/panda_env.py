@@ -23,7 +23,7 @@ class PandaEnv(gym.Env):
         self.observation_space = spaces.Box(np.array([-1]*5), np.array([1]*5))
         self.maxFingerForce = 20.0
         self.object="000"
-        self.storage_folder="~/3d_object_reconstruction/Data"
+        self.storage_folder="/home/susu/3d_object_reconstruction/Data"
     def step(self, action):
         p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING)
 
@@ -74,10 +74,14 @@ class PandaEnv(gym.Env):
         p.setJointMotorControlArray(self.pandaUid, list(range(7))+[9,10], p.POSITION_CONTROL, list(jointPoses)+2*[fingers])
 
         p.stepSimulation()
-        if self.object=='YcbChipsCan':
+        # if self.object=='YcbChipsCan':
+        #     state_object, _ = p.getBasePositionAndOrientation(self.objectUid)
+        #     state_object = np.array(state_object).astype(np.float32)
+        #     state_object[1] = state_object[1] - 0.02
+        if self.object=='YcbTomatoSoupCan'or self.object == "YcbChipsCan":
+            p.resetBasePositionAndOrientation(self.objectUid,p.getLinkState(self.pandaUid, 11)[0],p.getLinkState(self.pandaUid, 11)[1])
+            p.stepSimulation()
             state_object, _ = p.getBasePositionAndOrientation(self.objectUid)
-            state_object = np.array(state_object).astype(np.float32)
-            state_object[1] = state_object[1] - 0.02
         else:
             state_object, _ = p.getBasePositionAndOrientation(self.objectUid)
 
@@ -129,6 +133,14 @@ class PandaEnv(gym.Env):
             p.resetJointState(self.pandaUid,i, rest_poses[i])
         p.resetJointState(self.pandaUid, 9, 0.08)
         p.resetJointState(self.pandaUid,10, 0.08)
+        currentPosition = p.getLinkState(self.pandaUid, 11)[0]
+        jointPoses = p.calculateInverseKinematics(self.pandaUid, 11,
+                                                  [currentPosition[0],currentPosition[1]+0.02,currentPosition[2]],
+                                                  p.getLinkState(self.pandaUid, 11)[1])[0:7]
+
+        p.setJointMotorControlArray(self.pandaUid, list(range(7)) + [9, 10], p.POSITION_CONTROL,
+                                    list(jointPoses) + 2 * [0.08])
+        p.stepSimulation()
         # print(p.getNumJoints(self.pandaUid))  # numofjoints=12
         # for i in range(p.getNumJoints(self.pandaUid)):
         #    print(i,p.getJointInfo(self.pandaUid,i))
