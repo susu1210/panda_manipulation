@@ -4,9 +4,10 @@ import os
 import math
 from pybullet_object_models import ycb_objects
 def LoadObjectURDF(ObjectName):
+    print(ycb_objects.getDataPath())
     urdfRootPath = pybullet_data.getDataPath()
-    # state_object = [0.6, 0.0, 0.05]
-    state_object = [0.431545, 0, 0.234615] # end effector initial position
+    state_object = [0.6, 0.0, 0.05]
+    # state_object = [0.431545, 0, 0.234615] # end effector initial position
     stateOrientation=p.getQuaternionFromEuler([0,0,0])
     if not ObjectName.isalpha():
         if ObjectName == '002':
