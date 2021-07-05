@@ -110,17 +110,17 @@ class Agent:
             robot_joints.to_csv(self.folder + '/robot_joints.csv', index=False)
 
 if __name__ == "__main__":
-
+    RECORD = False
     env = gym.make('panda-v0')
     # object to be grasped
-    env.object = "YcbSugarBox"
+    env.object = "YcbTomatoSoupCan"
     # prior: grasping position offset w.r.t center of mass of object
     grasp_offset_dict = {
-        "YcbPottedMeatCan": [0, 0, 0.02],
+        "YcbPottedMeatCan": [0, 0.005, 0.015],
         "YcbGelatinBox": [0, +0.003, 0.022],
         "YcbMustardBottle": [0, 0, 0.08],
         "YcbTomatoSoupCan": [0, 0.007, 0.025],
-        "YcbCrackerBox": [0, 0, 0.035],
+        "YcbCrackerBox": [0, -0.01, 0.035],
         "YcbSugarBox": [0, 0, 0.0],
     }
     grasp_offset = grasp_offset_dict[env.object]
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         for i in range(len(rotate_pos)):
             action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
             observation, reward, done = env.step(action)
-            agent.recording(env)
+            if RECORD: agent.recording(env)
     # [0., -np.pi, np.pi / 2.]
     [0, -np.pi, 2 * np.pi]
     for j in range(2):
@@ -207,7 +207,7 @@ if __name__ == "__main__":
         for i in range(len(rotate_pos)):
             action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
             observation, reward, done = env.step(action)
-            agent.recording(env)
+            if RECORD: agent.recording(env)
 
     offset = [
         [0.1, 0, 0.1*(np.sqrt(2) - 1) ],
@@ -233,9 +233,9 @@ if __name__ == "__main__":
         for i in range(len(rotate_pos)):
             action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
             observation, reward, done = env.step(action)
-            agent.recording(env)
+            if RECORD: agent.recording(env)
 
     env.record_end = True
-    agent.recording(env)
+    if RECORD: agent.recording(env)
 
     env.close()
