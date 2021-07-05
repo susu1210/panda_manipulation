@@ -55,7 +55,7 @@ class PandaEnv(gym.Env):
             p.setJointMotorControlArray(self.pandaUid, [9, 10], p.POSITION_CONTROL, [0, 0])
             p.stepSimulation()
             contacts = p.getContactPoints(self.pandaUid, self.objectUid)
-            if len(contacts)>=3:
+            if len(contacts)>=10:
                 break
             self.step_counter += 1
         state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
@@ -100,6 +100,9 @@ class PandaEnv(gym.Env):
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
         return np.array(self.observation).astype(np.float32)
 
+    def is_static(self):
+        v = np.linalg.norm(p.getBaseVelocity(self.objectUid)[0])
+        return v<1e-2
 
     def render(self, mode='human'):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0.5, 0, 0.15],

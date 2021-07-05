@@ -32,24 +32,44 @@ def LoadObjectURDF(ObjectName):
                                     basePosition=state_object, baseOrientation=stateOrientation)
     elif ObjectName == 'YcbBanana':
         stateOrientation = p.getQuaternionFromEuler([0, 0, math.pi / 2.])
-        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model1.urdf"),
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
                                basePosition=state_object,
                                baseOrientation= stateOrientation)
+        p.changeDynamics(objectUid, -1, lateralFriction=0.8, spinningFriction=0.3, rollingFriction=0.3)
+    elif ObjectName == 'YcbCrackerBox':
+        state_object = [0.5, 0.015, 0.11]
+        stateOrientation = p.getQuaternionFromEuler([math.pi / 2, 0, 0])
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model1.urdf"),
+                               basePosition=state_object, baseOrientation=stateOrientation)
     elif ObjectName == 'YcbGelatinBox':
-        # state_object = [0.431545, -0.035, 0.264615]
         state_object = [0.5, -0.035, 0.05]
         stateOrientation=p.multiplyTransforms([0,0,0],p.getQuaternionFromEuler(
             [-math.pi/2.,0,0]),state_object,p.getQuaternionFromEuler([0,0,math.pi/4.]))[1]
-        # stateOrientation = p.getQuaternionFromEuler([0, 0, 0])
-        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model1.urdf"),
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
                                basePosition=state_object, baseOrientation=stateOrientation)
-    elif ObjectName == 'YcbCrackerBox':
-        state_object = [0.5, 0.015, 0.05]
-        # stateOrientation = p.multiplyTransforms([0, 0, 0], p.getQuaternionFromEuler(
-        #     [-math.pi / 2., 0, 0]), state_object, p.getQuaternionFromEuler([0, 0, 0]))[1]
-        stateOrientation = p.getQuaternionFromEuler([-math.pi / 2, 0, 0])
-        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model1.urdf"),
+        p.changeDynamics(objectUid, -1, lateralFriction=1.0, rollingFriction=-1.0)
+    elif ObjectName == 'YcbTomatoSoupCan':
+        state_object = [0.5, -0., 0.11]
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
+                               basePosition=state_object,)
+        p.changeDynamics(objectUid, -1, lateralFriction=1.0, spinningFriction=0.8, rollingFriction=-1.0)
+    elif ObjectName == 'YcbMustardBottle':
+        state_object = [0.5, 0.015, 0.11]
+        stateOrientation = p.getQuaternionFromEuler([0, 0, 0])
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
                                basePosition=state_object, baseOrientation=stateOrientation)
+    elif ObjectName == 'YcbPottedMeatCan':
+        state_object = [0.5, 0.015, 0.11]
+        stateOrientation = p.getQuaternionFromEuler([0, 0, -math.pi/3])
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
+                               basePosition=state_object, baseOrientation=stateOrientation)
+        p.changeDynamics(objectUid, -1, lateralFriction=0.8, spinningFriction=0.3, rollingFriction=0.3)
+    elif ObjectName == "YcbSugarBox":
+        state_object = [0.5, 0.015, 0.11]
+        stateOrientation = p.getQuaternionFromEuler([math.pi/2., 0, 0])
+        objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
+                               basePosition=state_object, baseOrientation=stateOrientation)
+        p.changeDynamics(objectUid, -1, lateralFriction=1.0, spinningFriction=0., rollingFriction=0.)
     else:
         objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
                                 basePosition=state_object)

@@ -113,16 +113,28 @@ if __name__ == "__main__":
 
     env = gym.make('panda-v0')
     # object to be grasped
-    env.object = "YcbGelatinBox"
+    env.object = "YcbSugarBox"
     # prior: grasping position offset w.r.t center of mass of object
-    grasp_offset = [0, 0, 0.02]
+    grasp_offset_dict = {
+        "YcbPottedMeatCan": [0, 0, 0.02],
+        "YcbGelatinBox": [0, +0.003, 0.022],
+        "YcbMustardBottle": [0, 0, 0.08],
+        "YcbTomatoSoupCan": [0, 0.007, 0.025],
+        "YcbCrackerBox": [0, 0, 0.035],
+        "YcbSugarBox": [0, 0, 0.0],
+    }
+    grasp_offset = grasp_offset_dict[env.object]
     agent = Agent(env)
 
     
     observation = env.reset()
+
+    while not env.is_static():
+        p.stepSimulation()
+        time.sleep(0.001)
     fingers = 1
     obj_position = agent.get_obj_position(env.objectUid)
-    prepick_position = [x+y for x,y in zip(obj_position, [0, 0, 0.1])]
+    prepick_position = [x+y for x,y in zip(obj_position, [0, 0, 0.15])]
     grasp_position = [x + y for x, y in zip(obj_position, grasp_offset)]
     init_tip_pose = agent.get_tip_position(env)
     prepick_data = MovementData('prepick')
@@ -149,7 +161,7 @@ if __name__ == "__main__":
     init_tip_ori = agent.get_tip_orientation(env)  # quartenion
 
 
-    fingers = [0.08, 0.08]
+    fingers = [0.1, 0.1]
     for i in range(len(pick_group_pos)):
         action = ['pick', pick_group_pos[i], init_tip_ori, fingers]
         observation, reward, done = env.step(action)
@@ -169,7 +181,6 @@ if __name__ == "__main__":
         observation, reward, done = env.step(action)
 
     # start recording
-
     ee_position = agent.get_tip_position(env)
     for j in range(6):
         rotate_pos = [ee_position]* 120 # hz=240, lasting 0.5 second.
@@ -226,6 +237,5 @@ if __name__ == "__main__":
 
     env.record_end = True
     agent.recording(env)
-
 
     env.close()
