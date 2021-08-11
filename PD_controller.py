@@ -20,7 +20,7 @@ class MovementData:
         self.min_sync_time = 0.0 # in rml, min_sync_time <= time_reach_target_pos_and_vel; if min_sync_time is larger than required, then motion will be less greedy and take time of min_sync; Otherwise, if required time is larger than given min_sync, required time is taken to ensure reach target
 
 class Agent:
-    def __init__(self, env, hz=240):
+    def __init__(self, hz=240):
         self.gen = reflexxes.extra.PositionTrajectoryGenerator(
             number_of_dofs=3,
             cycle_time=1/float(hz),
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     RECORD = False
     env = gym.make('panda-v0')
     # object to be grasped
-    env.object = "YcbTomatoSoupCan"
+    env.object = "YcbBanana"
     # prior: grasping position offset w.r.t center of mass of object
     grasp_offset_dict = {
         "YcbPottedMeatCan": [0, 0.005, 0.015],
@@ -122,9 +122,10 @@ if __name__ == "__main__":
         "YcbTomatoSoupCan": [0, 0.007, 0.025],
         "YcbCrackerBox": [0, -0.01, 0.035],
         "YcbSugarBox": [0, 0, 0.0],
+        "YcbBanana": [0, 0, 0]
     }
     grasp_offset = grasp_offset_dict[env.object]
-    agent = Agent(env)
+    agent = Agent()
 
     
     observation = env.reset()

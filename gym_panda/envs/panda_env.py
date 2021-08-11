@@ -9,6 +9,7 @@ import math
 import numpy as np
 import random
 from pybullet_object_models import ycb_objects
+import time
 from Load_Object_URDF import LoadObjectURDF
 MAX_EPISODE_LEN = 20*100
 
@@ -18,6 +19,7 @@ class PandaEnv(gym.Env):
     def __init__(self):
         self.step_counter = 0
         p.connect(p.GUI)
+        p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         p.resetDebugVisualizerCamera(cameraDistance=0.5, cameraYaw=90, cameraPitch=-14, cameraTargetPosition=[0.60, 0.0, 0.45])
         self.action_space = spaces.Box(np.array([-1]*4), np.array([1]*4))
         self.observation_space = spaces.Box(np.array([-1]*5), np.array([1]*5))
@@ -34,10 +36,12 @@ class PandaEnv(gym.Env):
                                     list(jointPoses))
         p.setJointMotorControlArray(self.pandaUid, [9, 10], p.POSITION_CONTROL, action[3])
 
-        p.stepSimulation()
-        state_robot = p.getLinkState(self.pandaUid, 11)[0]
-        state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
 
+        p.stepSimulation()
+        state_robot = p.getLinkState(self.pandaUid, 11)[0:2]
+        state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
+        if action[0] == 'rotate':
+            time.sleep(1 / 240.)
         self.step_counter += 1
 
         if self.step_counter > MAX_EPISODE_LEN:
@@ -47,7 +51,7 @@ class PandaEnv(gym.Env):
             reward = 0
             done = False
 
-        self.observation = state_robot  + state_fingers
+        self.observation = state_robot[0]  + state_fingers
         return np.array(self.observation).astype(np.float32), reward, done
 
     def activate(self):
@@ -67,6 +71,7 @@ class PandaEnv(gym.Env):
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,0) # we will enable rendering after we loaded everything
         urdfRootPath=pybullet_data.getDataPath()
         p.setGravity(0,0,-10)
+        p.setTimeStep(1/240.)
         planeUid = p.loadURDF(os.path.join(urdfRootPath,"plane.urdf"), basePosition=[0,0,-0.65])
 
         rest_poses = [0,-0.215,0,-2.57,0,2.356,2.356,0.08,0.08]
