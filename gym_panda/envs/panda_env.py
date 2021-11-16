@@ -24,18 +24,19 @@ class PandaEnv(gym.Env):
         self.action_space = spaces.Box(np.array([-1]*4), np.array([1]*4))
         self.observation_space = spaces.Box(np.array([-1]*5), np.array([1]*5))
         self.maxFingerForce = 20.0
-        self.object="000"
+        self.object=None
         self.storage_folder=os.path.join(os.path.abspath(os.path.dirname(os.getcwd())), "3d_object_reconstruction", "Data")
         self.record_end = False
+
     def step(self, action):
         p.configureDebugVisualizer(p.COV_ENABLE_SINGLE_STEP_RENDERING)
 
-        jointPoses = p.calculateInverseKinematics(self.pandaUid, 11, action[1], action[2])[0:7]
-        
+        jointPoses = p.calculateInverseKinematics(self.pandaUid, 11, action[1], action[2], maxNumIterations=200,
+                                                  residualThreshold=1e-5)[0:7]
+
         p.setJointMotorControlArray(self.pandaUid, self.joints, p.POSITION_CONTROL,
                                     list(jointPoses))
         p.setJointMotorControlArray(self.pandaUid, [9, 10], p.POSITION_CONTROL, action[3])
-
 
         p.stepSimulation()
         state_robot = p.getLinkState(self.pandaUid, 11)[0:2]
@@ -53,6 +54,24 @@ class PandaEnv(gym.Env):
 
         self.observation = state_robot[0]  + state_fingers
         return np.array(self.observation).astype(np.float32), reward, done
+
+    def stick_simulation(self):
+        state_robot = p.getLinkState(self.pandaUid, 11)[0:2]
+        jointPoses = p.calculateInverseKinematics(self.pandaUid, 11, state_robot[0], state_robot[1], maxNumIterations=200,
+                                                  residualThreshold=1e-5)[0:7]
+
+        inverse_tip_pos, inverse_tip_ori = p.invertTransform(self.init_tip_pose, self.init_tip_ori)
+        transform = p.multiplyTransforms(state_robot[0], state_robot[1],
+                                         inverse_tip_pos, inverse_tip_ori)
+        new = p.multiplyTransforms(transform[0], transform[1], self.init_obj_pose, self.init_obj_ori)
+
+        newPos = new[0]
+        newOri = new[1]
+        for i in range(5):
+            p.resetBasePositionAndOrientation(self.objectUid, newPos, newOri)
+            p.setJointMotorControlArray(self.pandaUid, self.joints, p.POSITION_CONTROL,
+                                        list(jointPoses))
+            p.stepSimulation()
 
     def activate(self):
         while self.step_counter < MAX_EPISODE_LEN:
@@ -94,12 +113,11 @@ class PandaEnv(gym.Env):
         tableUid = p.loadURDF(os.path.join(urdfRootPath, "table/table.urdf"),basePosition=[0.5,0,-0.65])
         trayUid = p.loadURDF(os.path.join(urdfRootPath, "tray/traybox.urdf"),basePosition=[0.5,0,0])
         self.objectUid = LoadObjectURDF(self.object)
+
         p.stepSimulation()
 
-
-        state_robot = p.getLinkState(self.pandaUid, 11)[0]
-
         state_fingers = (p.getJointState(self.pandaUid,9)[0], p.getJointState(self.pandaUid, 10)[0])
+        state_robot = p.getLinkState(self.pandaUid, 11)[0]
 
         self.observation = state_robot + state_fingers
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING,1)
@@ -107,7 +125,7 @@ class PandaEnv(gym.Env):
 
     def is_static(self):
         v = np.linalg.norm(p.getBaseVelocity(self.objectUid)[0])
-        return v<1e-2
+        return v<1e-4
 
     def render(self, mode='human'):
         view_matrix = p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0.5, 0, 0.15],

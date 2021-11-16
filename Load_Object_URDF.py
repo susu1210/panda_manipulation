@@ -5,7 +5,7 @@ import math
 from pybullet_object_models import ycb_objects
 BasePosAndOriDict = {
     "general" : [
-        [0.6, 0.0, 0.05],
+        [0.6, 0.0, 0.03],
         [0,0,0]
     ],
     "YcbChipsCan": [
@@ -55,8 +55,8 @@ def LoadObjectURDF(ObjectName):
             stateOrientation=p.getQuaternionFromEuler(BasePosAndOriDict[ObjectName][1])
         objectUid = p.loadURDF(os.path.join(ycb_objects.getDataPath(), ObjectName, "model.urdf"),
                                     basePosition=state_object, baseOrientation=stateOrientation)
-    if ObjectName == 'YcbBanana':
-        p.changeDynamics(objectUid, -1, lateralFriction=0.8, spinningFriction=0.3, rollingFriction=0.3)
+    if ObjectName == 'YcbBanana' or ObjectName == 'YcbTennisBall':
+        p.changeDynamics(objectUid, -1, lateralFriction=0.8, spinningFriction=0., rollingFriction=0.)
     if ObjectName == 'YcbTomatoSoupCan':
         p.changeDynamics(objectUid, -1, lateralFriction=1.0, spinningFriction=0.8, rollingFriction=1.0)
     if ObjectName == 'YcbPottedMeatCan':

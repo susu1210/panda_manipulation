@@ -29,7 +29,6 @@ class Agent:
             max_velocity=[5.0, 5.0, 5.0],
             max_acceleration=[10.0, 10.0, 10.0],
             max_jerk=[20.0, 20.0, 20.0])
-        self.grasp_com_offset = [0.0, 0.0, -0.015]
         self.iter = 0
     def get_obj_position(self, obj_id):
         return p.getBasePositionAndOrientation(obj_id)[0]
@@ -60,6 +59,7 @@ class Agent:
             acc_list.append(acc)
 
         return pos_list, vel_list, acc_list
+
     def recording(self, env):
         if self.iter == 0:
             if not os.path.exists(env.storage_folder+"/"+env.object+"/"):
@@ -111,37 +111,14 @@ class Agent:
                                          })
             robot_joints.to_csv(self.folder + '/robot_joints.csv', index=False)
 
-
 if __name__ == "__main__":
-    # stick threading
-    def stick_simulation():
-        while True:
-            if action and action[0] == 'rotate':
 
-                state_robot = p.getLinkState(env.pandaUid, 11)[0:2]
-                # newPos = [x + y for x, y in zip(state_robot[0], grasp_offset)]
-                # newOri = p.multiplyTransforms([0, 0, 0], state_robot[1],
-                #                               [0, 0, 0], init_obj_ori)[1]
-                newPos = [x - y for x, y in zip(state_robot[0], grasp_offset)]
-                inverse_tip_pos, inverse_tip_ori= p.invertTransform(init_tip_pose, init_tip_ori)
-                newOri = p.multiplyTransforms([0, 0, 0], state_robot[1],
-                                              [0, 0, 0], inverse_tip_ori)[1]
-                newOri = p.multiplyTransforms([0, 0, 0], newOri,
-                                              [0, 0, 0], init_obj_ori)[1]
-                p.resetBasePositionAndOrientation(env.objectUid, newPos, newOri)
-                time.sleep(1/240.)
-    action = []
-    stick_thread = threading.Thread(target=stick_simulation)
-    stick_thread.daemon = True
-    stick_thread.start()
-
-
-    RECORD = True
+    RECORD = False
     env = gym.make('panda-v0').env
 
     # storage path
     env.storage_folder = os.path.join(os.path.abspath(os.path.dirname(os.getcwd())), "3d_object_reconstruction",
-                                       "Data_new2")
+                                       "Data_stuck")
     # prior: grasping position offset w.r.t center of mass of object
     grasp_offset_dict = {
         "YcbPottedMeatCan": [0, 0.005, 0.015],
@@ -154,17 +131,31 @@ if __name__ == "__main__":
         "YcbTennisBall": [0, 0, 0.],
     }
     # object to be grasped
-    for key in ['YcbCrackerBox']:
+    for key in ['YcbTomatoSoupCan', 'YcbCrackerBox']:
     # for key in grasp_offset_dict.keys():
         env.object = key
-        grasp_offset = grasp_offset_dict[env.object]
-        agent = Agent()
 
-        observation = env.reset()
-        init_obj_ori = p.getBasePositionAndOrientation(env.objectUid)[1]
+        agent = Agent()
+        grasp_offset = grasp_offset_dict[env.object]
+
+        env.reset()
         while not env.is_static():
             p.stepSimulation()
-            time.sleep(0.001)
+
+        debug = True
+        if debug:
+            p.addUserDebugLine([0, 0, 0], [0.5, 0, 0], [1, 0, 0], lineWidth=5,
+                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
+            p.addUserDebugLine([0, 0, 0], [0, 0.5, 0], [0, 1, 0], lineWidth=5,
+                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
+            p.addUserDebugLine([0, 0, 0], [0, 0, 0.5], [0, 0, 1], lineWidth=5,
+                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
+            p.addUserDebugLine([0, 0, 0], [0.5, 0, 0], [1, 0, 0], lineWidth=5,
+                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
+            p.addUserDebugLine([0, 0, 0], [0, 0.5, 0], [0, 1, 0], lineWidth=5,
+                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
+            p.addUserDebugLine([0, 0, 0], [0, 0, 0.5], [0, 0, 1], lineWidth=5,
+                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
         fingers = 1
         obj_position = agent.get_obj_position(env.objectUid)
         prepick_position = [x + y for x, y in zip(obj_position, [0, 0, 0.15])]
@@ -192,20 +183,7 @@ if __name__ == "__main__":
         pick_time = len(prepick_pos) * agent.gen.cycle_time
 
         # Compute gripper orientation and rotation increments
-        debug = True
-        if debug:
-            p.addUserDebugLine([0, 0, 0], [0.5, 0, 0], [1, 0, 0], lineWidth=5,
-                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
-            p.addUserDebugLine([0, 0, 0], [0, 0.5, 0], [0, 1, 0], lineWidth=5,
-                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
-            p.addUserDebugLine([0, 0, 0], [0, 0, 0.5], [0, 0, 1], lineWidth=5,
-                               parentObjectUniqueId=env.pandaUid, parentLinkIndex=10)
-            p.addUserDebugLine([0, 0, 0], [0.5, 0, 0], [1, 0, 0], lineWidth=5,
-                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
-            p.addUserDebugLine([0, 0, 0], [0, 0.5, 0], [0, 1, 0], lineWidth=5,
-                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
-            p.addUserDebugLine([0, 0, 0], [0, 0, 0.5], [0, 0, 1], lineWidth=5,
-                               parentObjectUniqueId=env.objectUid, parentLinkIndex=-1)
+
         fingers = [0.1, 0.1]
         for i in range(len(pick_group_pos)):
             action = ['pick', pick_group_pos[i], init_tip_ori, fingers]
@@ -225,17 +203,20 @@ if __name__ == "__main__":
         for i in range(len(lift_pos)):
             action = ['lift', lift_pos[i], init_tip_ori, fingers]
             observation, reward, done = env.step(action)
-        # p.createConstraint(env.pandaUid, 11, env.objectUid, -1, jointType=p.JOINT_FIXED,
-        #                    jointAxis= [0,0,0], parentFramePosition=grasp_offset, childFramePosition=[0,0,0],
-        #                    parentFrameOrientation=p.getLinkState(env.pandaUid,11)[1],
+        fingers = observation[-2:]
 
-        # p.createConstraint(env.pandaUid, 11, env.objectUid, -1, jointType=p.JOINT_FIXED,
-        #                    jointAxis= [0,0,0], parentFramePosition=grasp_offset, childFramePosition=[0,0,0],
-        #                    parentFrameOrientation=[0,0,0,1],
-        #                    childFrameOrientation=agent.get_tip_orientation(env) ,)
-        # start recording
 
+        # start rotating and recording
+        env.init_tip_pose = p.getLinkState(env.pandaUid, 11)[0]
+        env.init_tip_ori = p.getLinkState(env.pandaUid, 11)[1]
+        env.init_obj_pose = p.getBasePositionAndOrientation(env.objectUid)[0]
+        env.init_obj_ori = p.getBasePositionAndOrientation(env.objectUid)[1]
         ee_position = agent.get_tip_position(env)
+        # enableCollision = 0
+        # p.setCollisionFilterPair(bodyUniqueIdA=env.pandaUid, bodyUniqueIdB=env.objectUid,
+        #                          linkIndexA=9, linkIndexB=-1, enableCollision=enableCollision)
+        # p.setCollisionFilterPair(bodyUniqueIdA=env.pandaUid, bodyUniqueIdB=env.objectUid,
+        #                          linkIndexA=10, linkIndexB=-1, enableCollision=enableCollision)
         for j in range(6):
             rotate_pos = [ee_position] * 120  # hz=240, lasting 0.5 second.
             rotate_group_ori = []
@@ -247,6 +228,7 @@ if __name__ == "__main__":
             for i in range(len(rotate_pos)):
                 action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
                 observation, reward, done = env.step(action)
+                env.stick_simulation()
                 if RECORD: agent.recording(env)
 
         for j in range(2):
@@ -260,6 +242,7 @@ if __name__ == "__main__":
             for i in range(len(rotate_pos)):
                 action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
                 observation, reward, done = env.step(action)
+                env.stick_simulation()
                 if RECORD: agent.recording(env)
 
         offset = [
@@ -286,10 +269,10 @@ if __name__ == "__main__":
             for i in range(len(rotate_pos)):
                 action = ['rotate', rotate_pos[i], rotate_group_ori[i], fingers]
                 observation, reward, done = env.step(action)
+                env.stick_simulation()
                 if RECORD: agent.recording(env)
         action = []
         env.record_end = True
         if RECORD: agent.recording(env)
-    del stick_thread
-    # stick_thread.join()
+
     env.close()

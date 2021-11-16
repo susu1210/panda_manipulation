@@ -4,7 +4,6 @@ import gym
 import gym_panda
 import reflexxes
 import pybullet as p
-import transformations as tf
 import math
 import numpy as np
 import cv2
@@ -110,10 +109,10 @@ class Agent:
             robot_joints.to_csv(self.folder + '/robot_joints.csv', index=False)
 
 if __name__ == "__main__":
-    RECORD = False
-    env = gym.make('panda-v0')
+    RECORD = True
+    env = gym.make('panda-v0').env
     # object to be grasped
-    env.object = "YcbBanana"
+    env.object = "YcbCrackerBox"
     # prior: grasping position offset w.r.t center of mass of object
     grasp_offset_dict = {
         "YcbPottedMeatCan": [0, 0.005, 0.015],
@@ -122,7 +121,8 @@ if __name__ == "__main__":
         "YcbTomatoSoupCan": [0, 0.007, 0.025],
         "YcbCrackerBox": [0, -0.01, 0.035],
         "YcbSugarBox": [0, 0, 0.0],
-        "YcbBanana": [0, 0, 0]
+        "YcbBanana": [0, 0, 0],
+        "YcbTennisBall": [0, 0, 0.],
     }
     grasp_offset = grasp_offset_dict[env.object]
     agent = Agent()
@@ -181,6 +181,10 @@ if __name__ == "__main__":
         action = ['lift', lift_pos[i], init_tip_ori, fingers]
         observation, reward, done = env.step(action)
 
+    if env.object == "YcbTennisBall":
+        p.createConstraint(env.pandaUid, 11, env.objectUid, -1, jointType=p.JOINT_FIXED,
+                           jointAxis= [0,0,0], parentFramePosition=grasp_offset, childFramePosition=[0,0,0],
+                           parentFrameOrientation=p.getLinkState(env.pandaUid,11)[1],)
     # start recording
     ee_position = agent.get_tip_position(env)
     for j in range(6):
@@ -196,7 +200,6 @@ if __name__ == "__main__":
             observation, reward, done = env.step(action)
             if RECORD: agent.recording(env)
     # [0., -np.pi, np.pi / 2.]
-    [0, -np.pi, 2 * np.pi]
     for j in range(2):
         rotate_pos = [ee_position]* 120 # hz=240, lasting 0.5 second.
         rotate_group_ori = []
